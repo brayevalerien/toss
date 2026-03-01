@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "toss-cli"
@@ -28,6 +28,5 @@ Repository = "https://github.com/brayevalerien/toss"
 [project.scripts]
 toss = "toss_cli.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["toss_cli*"]
+[tool.hatch.build.targets.wheel]
+packages = ["toss_cli"]
