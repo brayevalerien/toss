@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "toss-cli"
+version = "1.0.0"
+description = "Minimal CLI to deploy and share static sites, HTML, and Markdown from your own server."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Valérien", email = "contact@brayevalerien.com" }]
+requires-python = ">=3.10"
+dependencies = []
+keywords = [
+    "cli", "static-site", "self-hosted", "deploy", "markdown",
+    "latex", "caddy", "rsync", "file-sharing",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+]
+
+[project.urls]
+Homepage = "https://github.com/brayevalerien/toss"
+Repository = "https://github.com/brayevalerien/toss"
+
+[project.scripts]
+toss = "toss_cli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["toss_cli*"]
