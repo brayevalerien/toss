@@ -67,11 +67,9 @@ docker compose up -d caddy
 ```
 
 ### Local CLI
-Once the server is configured, clone the repo and install toss locally:
+Once the server is configured, install toss:
 ```sh
-git clone https://github.com/brayevalerien/toss
-cd toss
-uv tool install .
+uv tool install toss-cli
 ```
 
 Once toss is installed, run the interactive setup wizard once:
