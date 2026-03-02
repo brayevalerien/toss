@@ -130,6 +130,45 @@ def get_stats(config: dict, slug: str) -> dict:
     return {"total": total, "unique_ips": len(ips), "last_accessed": last_accessed}
 
 
+def get_all_stats(config: dict, slugs: list[str]) -> dict[str, dict] | None:
+    """Return per-slug {"total": int, "unique_ips": int} for all slugs, or None if unavailable."""
+    if "log_path" not in config:
+        return None
+    log_path = _q(config["log_path"])
+    cmd = f"if [ ! -f {log_path} ]; then echo TOSS_LOG_MISSING; elif [ ! -r {log_path} ]; then echo TOSS_LOG_UNREADABLE; else cat {log_path}; fi"
+    result = run_ssh(config["host"], cmd)
+    if result.returncode != 0 and result.stderr.strip():
+        return None
+    out = result.stdout.strip()
+    if out in ("TOSS_LOG_MISSING", "TOSS_LOG_UNREADABLE"):
+        return None
+
+    totals: dict[str, int] = {s: 0 for s in slugs}
+    ips: dict[str, set[str]] = {s: set() for s in slugs}
+
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        status = entry.get("status", 0)
+        if not (200 <= status < 400):
+            continue
+        uri = entry.get("request", {}).get("uri", "")
+        for slug in slugs:
+            if f"/{slug}/" in uri:
+                totals[slug] += 1
+                ip = entry.get("request", {}).get("remote_ip")
+                if ip:
+                    ips[slug].add(ip)
+                break
+
+    return {s: {"total": totals[s], "unique_ips": len(ips[s])} for s in slugs}
+
+
 def rsync_deploy(config: dict, local_dir: str, slug: str) -> None:
     remote_dest = f"{config['host']}:{config['remote_path']}/{slug}/"
     result = subprocess.run(

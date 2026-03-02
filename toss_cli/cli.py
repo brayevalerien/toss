@@ -3,7 +3,7 @@ import sys
 
 from toss_cli.config import init_config, load_config
 from toss_cli.deploy import deploy
-from toss_cli.remote import get_listings, get_stats, hide_slug, undeploy_slug, unhide_slug
+from toss_cli.remote import get_all_stats, get_listings, get_stats, hide_slug, undeploy_slug, unhide_slug
 from toss_cli.ssh import validate_slug
 
 
@@ -13,14 +13,25 @@ def _cmd_list() -> None:
     if not entries:
         print("No deployments found.")
         return
-    col = max(len(slug) for slug, _, _ in entries)
+    slugs = [slug for slug, _, _ in entries]
+    stats = get_all_stats(config, slugs)
+    col = max(len(slug) for slug in slugs)
     col = max(col, 4)
     domain = config["domain"]
-    print(f"{'SLUG':<{col}}  {'LINK':<{len(domain) + col + 2}}  SIZE")
-    print("-" * (col + len(domain) + col + 12))
-    for slug, hidden, size in sorted(entries):
-        link = "[hidden]" if hidden else f"{domain}/{slug}/"
-        print(f"{slug:<{col}}  {link:<{len(domain) + col + 2}}  {size}")
+    link_col = len(domain) + col + 2
+    if stats:
+        print(f"{'SLUG':<{col}}  {'LINK':<{link_col}}  {'SIZE':<6}  {'REQUESTS':>8}  {'VISITORS':>8}")
+        print("-" * (col + link_col + 34))
+        for slug, hidden, size in sorted(entries):
+            link = "[hidden]" if hidden else f"{domain}/{slug}/"
+            s = stats.get(slug, {"total": 0, "unique_ips": 0})
+            print(f"{slug:<{col}}  {link:<{link_col}}  {size:<6}  {s['total']:>8}  {s['unique_ips']:>8}")
+    else:
+        print(f"{'SLUG':<{col}}  {'LINK':<{link_col}}  SIZE")
+        print("-" * (col + link_col + 12))
+        for slug, hidden, size in sorted(entries):
+            link = "[hidden]" if hidden else f"{domain}/{slug}/"
+            print(f"{slug:<{col}}  {link:<{link_col}}  {size}")
 
 
 def main() -> None:
