@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="accent" x1="0" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#f92672"/>
+      <stop offset="100%" stop-color="#ae81ff"/>
+    </linearGradient>
+    <clipPath id="circle-clip">
+      <circle cx="256" cy="256" r="240"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#272822"/>
+  
+  <!-- Chevron - tighter angle -->
+  <path d="M144 380 L256 190 L368 380" 
+        stroke="url(#accent)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Detaching particles -->
+  <rect x="204" y="142" width="104" height="12" rx="6" fill="#a6e22e" opacity="0.9"/>
+  <rect x="220" y="114" width="72" height="12" rx="6" fill="#a6e22e" opacity="0.55"/>
+  <rect x="240" y="86" width="32" height="12" rx="6" fill="#a6e22e" opacity="0.25"/>
+</svg>

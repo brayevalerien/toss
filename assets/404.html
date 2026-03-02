@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>404</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #272822;
+      color: #f8f8f2;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .layout {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+    }
+
+    .code {
+      font-size: 8rem;
+      font-weight: 700;
+      color: #ae81ff;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .divider {
+      width: 1px;
+      height: 8rem;
+      background: #75715e;
+      opacity: 0.4;
+    }
+
+    .right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      opacity: 0.7;
+    }
+
+    .msg {
+      font-size: 0.85rem;
+      color: #75715e;
+      line-height: 1.7;
+    }
+
+    .msg a {
+      color: #66d9ef;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .msg a:hover {
+      border-color: #66d9ef;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <div class="code">404</div>
+    <div class="divider"></div>
+    <div class="right">
+      <svg class="logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g" x1="0" y1="1" x2="0.5" y2="0">
+            <stop offset="0%" stop-color="#f92672" />
+            <stop offset="100%" stop-color="#ae81ff" />
+          </linearGradient>
+        </defs>
+        <path d="M144 380 L256 190 L368 380" stroke="url(#g)" stroke-width="48" stroke-linecap="round"
+          stroke-linejoin="round" fill="none" />
+        <rect x="204" y="142" width="104" height="12" rx="6" fill="#a6e22e" opacity="0.9" />
+        <rect x="220" y="114" width="72" height="12" rx="6" fill="#a6e22e" opacity="0.55" />
+        <rect x="240" y="86" width="32" height="12" rx="6" fill="#a6e22e" opacity="0.25" />
+      </svg>
+      <p class="msg">
+        This page doesn't exist.<br>
+        Contact the website owner<br>
+        if this link is broken.
+      </p>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -1,17 +1,30 @@
 import argparse
 import sys
 
+from toss_cli.config import init_config
 
-def main():
+
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="toss",
         description="Deploy static sites, HTML, and Markdown to your own server.",
     )
-    parser.add_subparsers(dest="command")
-    parser.parse_args()
+    subparsers = parser.add_subparsers(dest="command")
 
-    print("no command — run `toss --help` for usage")
-    sys.exit(1)
+    subparsers.add_parser("init", help="interactive configuration setup")
+
+    args = parser.parse_args()
+
+    if args.command is None:
+        parser.print_help()
+        sys.exit(1)
+
+    try:
+        if args.command == "init":
+            init_config()
+    except (FileNotFoundError, RuntimeError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
