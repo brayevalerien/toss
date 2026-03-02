@@ -18,19 +18,19 @@ def _cmd_list() -> None:
     col = max(len(slug) for slug in slugs)
     col = max(col, 4)
     domain = config["domain"]
-    link_col = len(domain) + col + 2
+    link_col = len("https://") + len(domain) + col + 2
     if stats:
         print(f"{'SLUG':<{col}}  {'LINK':<{link_col}}  {'SIZE':<6}  {'REQUESTS':>8}  {'VISITORS':>8}")
         print("-" * (col + link_col + 34))
         for slug, hidden, size in sorted(entries):
-            link = "[hidden]" if hidden else f"{domain}/{slug}/"
+            link = "[hidden]" if hidden else f"https://{domain}/{slug}/"
             s = stats.get(slug, {"total": 0, "unique_ips": 0})
             print(f"{slug:<{col}}  {link:<{link_col}}  {size:<6}  {s['total']:>8}  {s['unique_ips']:>8}")
     else:
         print(f"{'SLUG':<{col}}  {'LINK':<{link_col}}  SIZE")
         print("-" * (col + link_col + 12))
         for slug, hidden, size in sorted(entries):
-            link = "[hidden]" if hidden else f"{domain}/{slug}/"
+            link = "[hidden]" if hidden else f"https://{domain}/{slug}/"
             print(f"{slug:<{col}}  {link:<{link_col}}  {size}")
 
 
