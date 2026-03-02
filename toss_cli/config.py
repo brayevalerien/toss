@@ -1,9 +1,10 @@
 import shutil
-import subprocess
 import time
 from pathlib import Path
 
 import tomllib
+
+from toss_cli.ssh import run_ssh
 
 CONFIG_PATH = Path.home() / ".config" / "toss" / "config.toml"
 
@@ -23,9 +24,7 @@ def load_config() -> dict[str, object]:
         config = tomllib.load(f)
     missing = [k for k in REQUIRED_KEYS if k not in config]
     if missing:
-        raise ValueError(
-            f"config missing required keys: {', '.join(missing)}\nrun `toss init` to fix your configuration."
-        )
+        raise ValueError(f"config missing required keys: {', '.join(missing)}\nrun `toss init` to fix your configuration.")
     return config
 
 
@@ -33,8 +32,7 @@ def _check_tools() -> None:
     missing = [t for t in ("rsync", "ssh") if shutil.which(t) is None]
     if missing:
         raise RuntimeError(
-            f"Missing the following dependencies: {', '.join(missing)}\n"
-            "Please them via your system package manager (e.g. apt install rsync openssh-client)."
+            f"Missing the following dependencies: {', '.join(missing)}\nPlease them via your system package manager (e.g. apt install rsync openssh-client)."
         )
 
 
@@ -51,12 +49,7 @@ def _prompt(label: str, default: str | int | None = None) -> str:
 
 def _validate_ssh(host: str) -> tuple[bool, float, str]:
     start = time.monotonic()
-    result = subprocess.run(
-        ["ssh", "-q", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", host, "exit"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
+    result = run_ssh(host, "exit", opts=["-q", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes"])
     elapsed = time.monotonic() - start
     return result.returncode == 0, elapsed, result.stderr.strip()
 
