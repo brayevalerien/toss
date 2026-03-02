@@ -3,7 +3,7 @@ import sys
 
 from toss_cli.config import init_config, load_config
 from toss_cli.deploy import deploy
-from toss_cli.remote import get_listings, hide_slug, undeploy_slug, unhide_slug
+from toss_cli.remote import get_listings, get_stats, hide_slug, undeploy_slug, unhide_slug
 from toss_cli.ssh import validate_slug
 
 
@@ -49,6 +49,9 @@ def main() -> None:
     p_undeploy = subparsers.add_parser("undeploy", help="permanently delete a deployment")
     p_undeploy.add_argument("slug")
 
+    p_stats = subparsers.add_parser("stats", help="show visit stats for a deployment")
+    p_stats.add_argument("slug")
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -86,6 +89,15 @@ def main() -> None:
                 return
             undeploy_slug(load_config(), args.slug)
             print(f"Deleted: {args.slug}")
+
+        elif args.command == "stats":
+            validate_slug(args.slug)
+            data = get_stats(load_config(), args.slug)
+            last = data["last_accessed"] if data["last_accessed"] is not None else "never"
+            print(f"stats for {args.slug}")
+            print(f"  total requests   {data['total']}")
+            print(f"  unique visitors  {data['unique_ips']}")
+            print(f"  last accessed    {last}")
 
     except (FileNotFoundError, RuntimeError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)

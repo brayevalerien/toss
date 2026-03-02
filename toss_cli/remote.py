@@ -1,5 +1,7 @@
+import json
 import shlex
 import subprocess
+from datetime import datetime, timezone
 from pathlib import PurePosixPath
 
 from toss_cli.ssh import run_ssh
@@ -74,6 +76,49 @@ def undeploy_slug(config: dict, slug: str) -> None:
     result = run_ssh(config["host"], f"rm -rf {_q(target)}")
     if result.returncode != 0:
         raise RuntimeError(f"Undeploy failed: {result.stderr.strip()}")
+
+
+def get_stats(config: dict, slug: str) -> dict:
+    """Return {"total": int, "unique_ips": int, "last_accessed": str | None} for slug."""
+    if not check_slug_exists(config, slug) and not _check_hidden_exists(config, slug):
+        raise ValueError(f"'{slug}' not found")
+    if "log_path" not in config:
+        raise ValueError("log_path not set in config - run `toss init` to configure it")
+    log_path = _q(config["log_path"])
+    cmd = f"grep -F '/{slug}/' {log_path} 2>/dev/null || true"
+    result = run_ssh(config["host"], cmd)
+    if result.returncode != 0 and result.stderr.strip():
+        raise RuntimeError(f"Stats failed: {result.stderr.strip()}")
+
+    total = 0
+    ips: set[str] = set()
+    last_ts: float | None = None
+
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        status = entry.get("status", 0)
+        if not (200 <= status < 400):
+            continue
+        total += 1
+        ip = entry.get("request", {}).get("remote_ip")
+        if ip:
+            ips.add(ip)
+        ts = entry.get("ts")
+        if ts is not None and (last_ts is None or ts > last_ts):
+            last_ts = ts
+
+    if last_ts is not None:
+        last_accessed = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+    else:
+        last_accessed = None
+
+    return {"total": total, "unique_ips": len(ips), "last_accessed": last_accessed}
 
 
 def rsync_deploy(config: dict, local_dir: str, slug: str) -> None:

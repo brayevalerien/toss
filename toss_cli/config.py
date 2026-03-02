@@ -73,6 +73,11 @@ def init_config() -> None:
     domain = _prompt("domain (e.g. share.mydomain.com)", existing.get("domain"))
     remote_path = _prompt("remote path", existing.get("remote_path", DEFAULTS["remote_path"]))
     slug_length_raw = _prompt("slug length", existing.get("slug_length", DEFAULTS["slug_length"]))
+    existing_log = existing.get("log_path", "")
+    log_hint = f" [{existing_log}]" if existing_log else " [/var/log/caddy/access.log, blank to skip]"
+    log_path_raw = input(f"Caddy log path{log_hint}: ").strip()
+    if not log_path_raw:
+        log_path_raw = existing_log or None
 
     try:
         slug_length = int(slug_length_raw)
@@ -97,5 +102,7 @@ def init_config() -> None:
         f.write(f"domain = {_toml_str(domain)}\n")
         f.write(f"remote_path = {_toml_str(remote_path)}\n")
         f.write(f"slug_length = {slug_length}\n")
+        if log_path_raw:
+            f.write(f"log_path = {_toml_str(log_path_raw)}\n")
 
     print(f"\nConfig saved to {CONFIG_PATH}")

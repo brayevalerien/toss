@@ -11,6 +11,7 @@ Toss is a minimal CLI to deploy and share static sites, HTML, and Markdown from 
 - Random slugs by default, custom slugs with `--slug`
 - Build-and-deploy in one step with `--build`
 - List, hide, unhide, and permanently delete deployments
+- Visit stats (total requests, unique visitors, last accessed) via Caddy JSON logs
 - Zero server-side dependencies beyond Caddy and SSH access
 
 ## Installation and setup
@@ -66,6 +67,37 @@ sudo systemctl reload caddy
 docker compose up -d caddy
 ```
 
+### Enabling visit stats
+`toss stats` parses Caddy's JSON access logs over SSH. Note that this required Caddy logging and thus is optional.
+
+Add a `log` block to your Caddy site block:
+```
+share.yourdomain.com {
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+    root * /srv/sites
+    ...
+}
+```
+
+If running Caddy in Docker, mount the log directory in your docker-compose.yml:
+```yaml
+volumes:
+  - /var/log/caddy:/var/log/caddy
+```
+
+Create the log directory and make it readable by your SSH user (run on server):
+```sh
+sudo mkdir -p /var/log/caddy
+sudo chmod o+rx /var/log/caddy
+# after the first restart, also:
+sudo chmod o+r /var/log/caddy/access.log
+```
+
+Restart Caddy, then re-run `toss init` and enter the log path (default: `/var/log/caddy/access.log`).
+
 ### Local CLI
 Once the server is configured, install toss:
 ```sh
@@ -85,6 +117,7 @@ This will prompt you for your server details, validate SSH connectivity, and sav
 > domain = "share.mydomain.com"
 > remote_path = "/srv/sites"
 > slug_length = 6
+> log_path = "/var/log/caddy/access.log"  # optional, needed for toss stats
 > ```
 
 ## Usage
@@ -111,4 +144,7 @@ toss unhide <slug>
 
 # permanently delete
 toss undeploy <slug>
+
+# show visit stats
+toss stats <slug>
 ```
