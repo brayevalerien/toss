@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOSS_TITLE</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/monokai-sublime.min.css">
+  <style>
+    body {
+      max-width: 740px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #f8f8f2;
+      background: #272822;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: system-ui, sans-serif;
+      line-height: 1.3;
+      margin-top: 2rem;
+      color: #f8f8f2;
+    }
+    a { color: #66d9ef; }
+    a:hover { color: #ae81ff; }
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background: #3e3d32;
+      padding: 0.15em 0.35em;
+      border-radius: 3px;
+      color: #a6e22e;
+    }
+    pre {
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    pre code {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 0.9em;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+    blockquote {
+      border-left: 3px solid #75715e;
+      margin: 0;
+      padding-left: 1.25rem;
+      color: #75715e;
+    }
+    hr { border-color: #3e3d32; }
+    img { max-width: 100%; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td {
+      border: 1px solid #3e3d32;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background: #3e3d32; color: #a6e22e; }
+    /* footnotes */
+    .footnotes { margin-top: 3rem; border-top: 1px solid #3e3d32; padding-top: 1rem; font-size: 0.9em; color: #75715e; }
+    .footnotes a { color: #75715e; }
+    sup a { color: #ae81ff; text-decoration: none; }
+    /* callout blocks */
+    .markdown-alert {
+      padding: 0.75rem 1rem;
+      border-left: 4px solid;
+      border-radius: 0 6px 6px 0;
+      margin: 1.5rem 0;
+    }
+    .markdown-alert p { margin: 0; }
+    .markdown-alert-title {
+      font-weight: bold;
+      font-family: system-ui, sans-serif;
+      font-size: 0.9em;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .markdown-alert-title svg { fill: currentColor; }
+    .markdown-alert-note      { border-color: #66d9ef; background: #1a2a2e; }
+    .markdown-alert-note      .markdown-alert-title { color: #66d9ef; }
+    .markdown-alert-tip       { border-color: #a6e22e; background: #1e2a1a; }
+    .markdown-alert-tip       .markdown-alert-title { color: #a6e22e; }
+    .markdown-alert-important { border-color: #ae81ff; background: #1e1a2e; }
+    .markdown-alert-important .markdown-alert-title { color: #ae81ff; }
+    .markdown-alert-warning   { border-color: #e6db74; background: #2a2a1a; }
+    .markdown-alert-warning   .markdown-alert-title { color: #e6db74; }
+    .markdown-alert-caution   { border-color: #f92672; background: #2a1a1e; }
+    .markdown-alert-caution   .markdown-alert-title { color: #f92672; }
+    /* mermaid diagrams */
+    .mermaid { margin: 1.5rem 0; text-align: center; }
+    @media print {
+      body { max-width: 100%; margin: 0; background: white; color: black; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked-footnote/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked-alert/dist/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <script>
+    function extractMath(md) {
+      const blocks = [];
+      md = md.replace(/\$\$([\s\S]+?)\$\$/g, (_, content) => {
+        return "TOSS_MATH_" + (blocks.push({ content, display: true }) - 1) + "_END";
+      });
+      md = md.replace(/\$([^\n$]+?)\$/g, (_, content) => {
+        return "TOSS_MATH_" + (blocks.push({ content, display: false }) - 1) + "_END";
+      });
+      return { md, blocks };
+    }
+
+    function restoreMath(el, blocks) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        if (!node.textContent.includes("TOSS_MATH_")) continue;
+        const span = document.createElement("span");
+        span.innerHTML = node.textContent.replace(/TOSS_MATH_(\d+)_END/g, (_, i) => {
+          const { content, display } = blocks[i];
+          return katex.renderToString(content, { displayMode: display, throwOnError: false });
+        });
+        node.parentNode.replaceChild(span, node);
+      }
+    }
+
+    marked.use(markedFootnote());
+    marked.use(markedAlert());
+    marked.use({
+      renderer: {
+        code(token) {
+          if (token.lang === "mermaid") {
+            return `<pre class="mermaid">${token.text}</pre>`;
+          }
+          return false;
+        }
+      }
+    });
+
+    const MARKDOWN = TOSS_CONTENT;
+    const { md, blocks } = extractMath(MARKDOWN);
+    document.getElementById("content").innerHTML = marked.parse(md);
+    restoreMath(document.getElementById("content"), blocks);
+    document.querySelectorAll("pre code").forEach(block => hljs.highlightElement(block));
+  </script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: false, theme: "dark" });
+    mermaid.run();
+  </script>
+</body>
+</html>
