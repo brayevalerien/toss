@@ -15,6 +15,12 @@ def check_slug_exists(config: dict, slug: str) -> bool:
     return result.returncode == 0
 
 
+def _check_hidden_exists(config: dict, slug: str) -> bool:
+    remote = PurePosixPath(config["remote_path"]) / f".{slug}"
+    result = run_ssh(config["host"], f"test -d {_q(remote)}")
+    return result.returncode == 0
+
+
 def get_listings(config: dict) -> list[tuple[str, bool, str]]:
     """Return [(slug, is_hidden, size)] for all deployments."""
     remote = _q(config["remote_path"])
@@ -38,6 +44,10 @@ def get_listings(config: dict) -> list[tuple[str, bool, str]]:
 
 
 def hide_slug(config: dict, slug: str) -> None:
+    if _check_hidden_exists(config, slug):
+        raise ValueError(f"'{slug}' is already hidden")
+    if not check_slug_exists(config, slug):
+        raise ValueError(f"'{slug}' not found")
     base = PurePosixPath(config["remote_path"])
     result = run_ssh(config["host"], f"mv {_q(base / slug)} {_q(base / ('.' + slug))}")
     if result.returncode != 0:
@@ -45,6 +55,10 @@ def hide_slug(config: dict, slug: str) -> None:
 
 
 def unhide_slug(config: dict, slug: str) -> None:
+    if check_slug_exists(config, slug):
+        raise ValueError(f"'{slug}' is already visible")
+    if not _check_hidden_exists(config, slug):
+        raise ValueError(f"'{slug}' not found")
     base = PurePosixPath(config["remote_path"])
     result = run_ssh(config["host"], f"mv {_q(base / ('.' + slug))} {_q(base / slug)}")
     if result.returncode != 0:
@@ -52,8 +66,12 @@ def unhide_slug(config: dict, slug: str) -> None:
 
 
 def undeploy_slug(config: dict, slug: str) -> None:
-    remote = PurePosixPath(config["remote_path"]) / slug
-    result = run_ssh(config["host"], f"rm -rf {_q(remote)}")
+    if not check_slug_exists(config, slug) and not _check_hidden_exists(config, slug):
+        raise ValueError(f"'{slug}' not found")
+    base = PurePosixPath(config["remote_path"])
+    # remove whichever form exists (visible or hidden)
+    target = base / (f".{slug}" if _check_hidden_exists(config, slug) else slug)
+    result = run_ssh(config["host"], f"rm -rf {_q(target)}")
     if result.returncode != 0:
         raise RuntimeError(f"Undeploy failed: {result.stderr.strip()}")
 
