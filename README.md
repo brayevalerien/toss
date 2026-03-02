@@ -5,6 +5,13 @@
 # Toss
 Toss is a minimal CLI to deploy and share static sites, HTML, and Markdown from your own server. Fast configuration and easy to setup so you can use it from about everywhere and share your work with private URLs.
 
+## Features
+- Deploy a Markdown file, an HTML file, or a full directory with a single command
+- Markdown pages render in the browser with LaTeX (KaTeX), syntax highlighting, footnotes, callouts, and Mermaid diagrams
+- Random slugs by default, custom slugs with `--slug`
+- Build-and-deploy in one step with `--build`
+- List, hide, unhide, and permanently delete deployments
+- Zero server-side dependencies beyond Caddy and SSH access
 
 ## Installation and setup
 > [!NOTE]
@@ -46,7 +53,7 @@ volumes:
   - /srv/sites:/srv/sites:ro
 ```
 
-Copy the 404 page to your server — feel free to edit it to add your own contact info:
+Copy the 404 page to your server. Feel free to edit `assets/404.html` to add your own contact info, and edit `toss_cli/templates/markdown_page.html` to customize the Markdown rendering theme before installing:
 ```sh
 scp assets/404.html user@your-server:/srv/sites/404.html
 ```
@@ -55,6 +62,7 @@ Then restart Caddy:
 ```sh
 # assuming systemd
 sudo systemctl reload caddy
+# or if using Docker
 docker compose up -d caddy
 ```
 
@@ -71,10 +79,38 @@ Once toss is installed, run the interactive setup wizard once:
 toss init
 ```
 This will prompt you for your server details, validate SSH connectivity, and save a config file at `~/.config/toss/config.toml`.
+
+> [!NOTE]
 > Re-run `toss init` at any time to update your configuration. If you prefer to edit it manually, it uses the following format:
 > ```toml
 > host = "user@my-server"
 > domain = "share.mydomain.com"
 > remote_path = "/srv/sites"
-> slug_length = 6 # length of auto-generated slugs
+> slug_length = 6
 > ```
+
+## Usage
+
+```sh
+# deploy a Markdown file, an HTML file, or a directory
+toss deploy path/to/file.md
+toss deploy path/to/page.html
+toss deploy path/to/site/
+
+# custom slug
+toss deploy report.md --slug my-report
+
+# build then deploy
+toss deploy . --build "npm run build"
+toss deploy . --build "npm run build" --out dist
+
+# list all deployments
+toss list
+
+# hide (makes URL return 404) and unhide
+toss hide <slug>
+toss unhide <slug>
+
+# permanently delete
+toss undeploy <slug>
+```
