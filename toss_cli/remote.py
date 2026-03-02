@@ -85,10 +85,19 @@ def get_stats(config: dict, slug: str) -> dict:
     if "log_path" not in config:
         raise ValueError("log_path not set in config - run `toss init` to configure it")
     log_path = _q(config["log_path"])
-    cmd = f"grep -F '/{slug}/' {log_path} 2>/dev/null || true"
+    cmd = (
+        f"if [ ! -f {log_path} ]; then echo TOSS_LOG_MISSING;"
+        f" elif [ ! -r {log_path} ]; then echo TOSS_LOG_UNREADABLE;"
+        f" else grep -F '/{slug}/' {log_path} || true; fi"
+    )
     result = run_ssh(config["host"], cmd)
     if result.returncode != 0 and result.stderr.strip():
         raise RuntimeError(f"Stats failed: {result.stderr.strip()}")
+    out = result.stdout.strip()
+    if out == "TOSS_LOG_MISSING":
+        raise RuntimeError(f"Log file not found at {config['log_path']}.\nAdd a log block to your Caddyfile and restart Caddy - see README for details.")
+    if out == "TOSS_LOG_UNREADABLE":
+        raise RuntimeError(f"Log file at {config['log_path']} is not readable by your SSH user.\nRun on the server: sudo chmod o+r {config['log_path']}")
 
     total = 0
     ips: set[str] = set()
