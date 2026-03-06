@@ -61,7 +61,6 @@ def main() -> None:
         prog="toss",
         description="Deploy static sites, HTML, and Markdown to your own server.",
     )
-    parser.add_argument("--json", action="store_true", help="output as JSON (machine-readable)")
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("init", help="interactive configuration setup")
@@ -73,21 +72,27 @@ def main() -> None:
     p_deploy.add_argument("--out", metavar="DIR", help="build output directory (with --build)")
     p_deploy.add_argument("-y", "--yes", action="store_true", help="skip overwrite confirmation")
     p_deploy.add_argument("--title", help="page title for Markdown deployments")
+    p_deploy.add_argument("--json", action="store_true", help="output as JSON")
 
-    subparsers.add_parser("list", help="list all deployments")
+    p_list = subparsers.add_parser("list", help="list all deployments")
+    p_list.add_argument("--json", action="store_true", help="output as JSON")
 
     p_hide = subparsers.add_parser("hide", help="make a deployment inaccessible")
     p_hide.add_argument("slug")
+    p_hide.add_argument("--json", action="store_true", help="output as JSON")
 
     p_unhide = subparsers.add_parser("unhide", help="restore a hidden deployment")
     p_unhide.add_argument("slug")
+    p_unhide.add_argument("--json", action="store_true", help="output as JSON")
 
     p_undeploy = subparsers.add_parser("undeploy", help="permanently delete a deployment")
     p_undeploy.add_argument("slug")
     p_undeploy.add_argument("-y", "--yes", action="store_true", help="skip deletion confirmation")
+    p_undeploy.add_argument("--json", action="store_true", help="output as JSON")
 
     p_stats = subparsers.add_parser("stats", help="show visit stats for a deployment")
     p_stats.add_argument("slug")
+    p_stats.add_argument("--json", action="store_true", help="output as JSON")
 
     args = parser.parse_args()
 
@@ -115,12 +120,18 @@ def main() -> None:
         elif args.command == "hide":
             validate_slug(args.slug)
             hide_slug(load_config(), args.slug)
-            print(f"Hidden: {args.slug}")
+            if args.json:
+                print(json.dumps({"slug": args.slug, "hidden": True}))
+            else:
+                print(f"Hidden: {args.slug}")
 
         elif args.command == "unhide":
             validate_slug(args.slug)
             unhide_slug(load_config(), args.slug)
-            print(f"Restored: {args.slug}")
+            if args.json:
+                print(json.dumps({"slug": args.slug, "hidden": False}))
+            else:
+                print(f"Restored: {args.slug}")
 
         elif args.command == "undeploy":
             validate_slug(args.slug)
@@ -131,7 +142,10 @@ def main() -> None:
                     return
             print("deleting...", file=sys.stderr)
             undeploy_slug(load_config(), args.slug)
-            print(f"Deleted: {args.slug}")
+            if args.json:
+                print(json.dumps({"slug": args.slug, "deleted": True}))
+            else:
+                print(f"Deleted: {args.slug}")
 
         elif args.command == "stats":
             validate_slug(args.slug)
