@@ -140,7 +140,7 @@ toss deploy . --build "npm run build" --out dist
 
 # skip confirmation prompts (useful for scripts)
 toss deploy path/to/site/ --slug my-site -y
-toss undeploy <slug> -y
+toss rm <slug> -y
 
 # list all deployments
 toss list
@@ -150,7 +150,7 @@ toss hide <slug>
 toss unhide <slug>
 
 # permanently delete
-toss undeploy <slug>
+toss rm <slug>
 
 # show visit stats
 toss stats <slug>

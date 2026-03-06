@@ -85,7 +85,7 @@ def main() -> None:
     p_unhide.add_argument("slug")
     p_unhide.add_argument("--json", action="store_true", help="output as JSON")
 
-    p_undeploy = subparsers.add_parser("undeploy", help="permanently delete a deployment")
+    p_undeploy = subparsers.add_parser("rm", help="permanently delete a deployment")
     p_undeploy.add_argument("slug")
     p_undeploy.add_argument("-y", "--yes", action="store_true", help="skip deletion confirmation")
     p_undeploy.add_argument("--json", action="store_true", help="output as JSON")
@@ -133,7 +133,7 @@ def main() -> None:
             else:
                 print(f"Restored: {args.slug}")
 
-        elif args.command == "undeploy":
+        elif args.command == "rm":
             validate_slug(args.slug)
             if not args.yes:
                 answer = input(f"Permanently delete '{args.slug}'? [y/N] ").strip().lower()
