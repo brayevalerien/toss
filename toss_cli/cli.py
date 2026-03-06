@@ -48,6 +48,7 @@ def main() -> None:
     p_deploy.add_argument("--slug", help="custom slug (default: random)")
     p_deploy.add_argument("--build", metavar="CMD", help="run a build command first")
     p_deploy.add_argument("--out", metavar="DIR", help="build output directory (with --build)")
+    p_deploy.add_argument("-y", "--yes", action="store_true", help="skip overwrite confirmation")
 
     subparsers.add_parser("list", help="list all deployments")
 
@@ -59,6 +60,7 @@ def main() -> None:
 
     p_undeploy = subparsers.add_parser("undeploy", help="permanently delete a deployment")
     p_undeploy.add_argument("slug")
+    p_undeploy.add_argument("-y", "--yes", action="store_true", help="skip deletion confirmation")
 
     p_stats = subparsers.add_parser("stats", help="show visit stats for a deployment")
     p_stats.add_argument("slug")
@@ -76,7 +78,7 @@ def main() -> None:
         elif args.command == "deploy":
             if not args.build and not args.path:
                 p_deploy.error("path is required unless --build is specified")
-            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out)
+            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out, yes=args.yes)
             print(url)
 
         elif args.command == "list":
@@ -94,10 +96,11 @@ def main() -> None:
 
         elif args.command == "undeploy":
             validate_slug(args.slug)
-            answer = input(f"Permanently delete '{args.slug}'? [y/N] ").strip().lower()
-            if answer != "y":
-                print("Cancelled.")
-                return
+            if not args.yes:
+                answer = input(f"Permanently delete '{args.slug}'? [y/N] ").strip().lower()
+                if answer != "y":
+                    print("Cancelled.")
+                    return
             undeploy_slug(load_config(), args.slug)
             print(f"Deleted: {args.slug}")
 

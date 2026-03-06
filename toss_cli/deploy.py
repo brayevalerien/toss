@@ -55,6 +55,7 @@ def deploy(
     slug: str | None = None,
     build_cmd: str | None = None,
     out_dir: str | None = None,
+    yes: bool = False,
 ) -> str:
     from toss_cli.config import load_config
 
@@ -75,9 +76,10 @@ def deploy(
     if slug:
         validate_slug(slug)
         if remote.check_slug_exists(config, slug):
-            answer = input(f"'{slug}' is already taken, overwrite? [y/N] ").strip().lower()
-            if answer != "y":
-                raise RuntimeError("Deploy cancelled")
+            if not yes:
+                answer = input(f"'{slug}' is already taken, overwrite? [y/N] ").strip().lower()
+                if answer != "y":
+                    raise RuntimeError("Deploy cancelled")
     else:
         slug = _find_free_slug(config)
 
