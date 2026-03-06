@@ -35,8 +35,9 @@ def _detect_input(path: Path) -> str:
     raise ValueError(f"Unsupported file type: {path.suffix} (expected .md, .html, or a directory)")
 
 
-def _prepare_build(cmd: str, out_dir: str | None) -> Path:
-    print("building...", file=sys.stderr)
+def _prepare_build(cmd: str, out_dir: str | None, quiet: bool = False) -> Path:
+    if not quiet:
+        print("building...", file=sys.stderr)
     result = subprocess.run(cmd, shell=True)
     if result.returncode != 0:
         raise RuntimeError(f"Build command failed with exit code {result.returncode}")
@@ -58,6 +59,7 @@ def deploy(
     build_cmd: str | None = None,
     out_dir: str | None = None,
     yes: bool = False,
+    quiet: bool = False,
 ) -> str:
     from toss_cli.config import load_config
 
@@ -65,7 +67,7 @@ def deploy(
 
     # build mode
     if build_cmd:
-        local_dir = _prepare_build(build_cmd, out_dir)
+        local_dir = _prepare_build(build_cmd, out_dir, quiet=quiet)
         input_type = "directory"
     else:
         p = Path(path)
@@ -102,9 +104,11 @@ def deploy(
         else:
             local_dir = str(local_dir or path)
 
-        print("deploying...", file=sys.stderr)
+        if not quiet:
+            print("deploying...", file=sys.stderr)
         remote.rsync_deploy(config, str(local_dir), slug)
-        print("done", file=sys.stderr)
+        if not quiet:
+            print("done", file=sys.stderr)
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)

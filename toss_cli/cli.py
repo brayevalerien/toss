@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 
 from toss_cli.config import init_config, load_config
@@ -7,19 +8,38 @@ from toss_cli.remote import get_all_stats, get_listings, get_stats, hide_slug, u
 from toss_cli.ssh import validate_slug
 
 
-def _cmd_list() -> None:
+def _cmd_list(json_output: bool = False) -> None:
     config = load_config()
     entries = get_listings(config)
     if not entries:
-        print("No deployments found.")
+        if json_output:
+            print("[]")
+        else:
+            print("No deployments found.")
         return
     slugs = [slug for slug, _, _ in entries]
-    if "log_path" in config:
+    if not json_output and "log_path" in config:
         print("fetching stats...", file=sys.stderr)
     stats = get_all_stats(config, slugs)
+    domain = config["domain"]
+
+    if json_output:
+        rows = []
+        for slug, hidden, size in sorted(entries):
+            s = (stats or {}).get(slug)
+            rows.append({
+                "slug": slug,
+                "url": None if hidden else f"https://{domain}/{slug}/",
+                "hidden": hidden,
+                "size": size,
+                "requests": s["total"] if s else None,
+                "visitors": s["unique_ips"] if s else None,
+            })
+        print(json.dumps(rows))
+        return
+
     col = max(len(slug) for slug in slugs)
     col = max(col, 4)
-    domain = config["domain"]
     link_col = len("https://") + len(domain) + col + 2
     if stats:
         print(f"{'SLUG':<{col}}  {'LINK':<{link_col}}  {'SIZE':<6}  {'REQUESTS':>8}  {'VISITORS':>8}")
@@ -41,6 +61,7 @@ def main() -> None:
         prog="toss",
         description="Deploy static sites, HTML, and Markdown to your own server.",
     )
+    parser.add_argument("--json", action="store_true", help="output as JSON (machine-readable)")
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("init", help="interactive configuration setup")
@@ -80,11 +101,15 @@ def main() -> None:
         elif args.command == "deploy":
             if not args.build and not args.path:
                 p_deploy.error("path is required unless --build is specified")
-            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out, yes=args.yes)
-            print(url)
+            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out, yes=args.yes, quiet=args.json)
+            if args.json:
+                slug = url.rstrip("/").rsplit("/", 1)[-1]
+                print(json.dumps({"url": url, "slug": slug}))
+            else:
+                print(url)
 
         elif args.command == "list":
-            _cmd_list()
+            _cmd_list(json_output=args.json)
 
         elif args.command == "hide":
             validate_slug(args.slug)
@@ -109,13 +134,17 @@ def main() -> None:
 
         elif args.command == "stats":
             validate_slug(args.slug)
-            print("fetching stats...", file=sys.stderr)
+            if not args.json:
+                print("fetching stats...", file=sys.stderr)
             data = get_stats(load_config(), args.slug)
-            last = data["last_accessed"] if data["last_accessed"] is not None else "never"
-            print(f"stats for {args.slug}")
-            print(f"  total requests   {data['total']}")
-            print(f"  unique visitors  {data['unique_ips']}")
-            print(f"  last accessed    {last}")
+            if args.json:
+                print(json.dumps(data))
+            else:
+                last = data["last_accessed"] if data["last_accessed"] is not None else "never"
+                print(f"stats for {args.slug}")
+                print(f"  total requests   {data['total']}")
+                print(f"  unique visitors  {data['unique_ips']}")
+                print(f"  last accessed    {last}")
 
     except (FileNotFoundError, RuntimeError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)

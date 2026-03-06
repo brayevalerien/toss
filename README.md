@@ -12,6 +12,8 @@ Toss is a minimal CLI to deploy and share static sites, HTML, and Markdown from 
 - Build-and-deploy in one step with `--build`
 - List, hide, unhide, and permanently delete deployments
 - Visit stats (total requests, unique visitors, last accessed) via Caddy JSON logs
+- Machine-readable JSON output with `--json` (deploy, list, stats)
+- Skip confirmation prompts with `-y` for scripting and automation
 - Zero server-side dependencies beyond Caddy and SSH access
 
 ## Installation and setup
@@ -135,6 +137,10 @@ toss deploy report.md --slug my-report
 toss deploy . --build "npm run build"
 toss deploy . --build "npm run build" --out dist
 
+# skip confirmation prompts (useful for scripts)
+toss deploy path/to/site/ --slug my-site -y
+toss undeploy <slug> -y
+
 # list all deployments
 toss list
 
@@ -147,4 +153,9 @@ toss undeploy <slug>
 
 # show visit stats
 toss stats <slug>
+
+# machine-readable JSON output
+toss --json deploy path/to/site/
+toss --json list
+toss --json stats <slug>
 ```
