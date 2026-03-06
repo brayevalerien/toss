@@ -60,6 +60,7 @@ def deploy(
     out_dir: str | None = None,
     yes: bool = False,
     quiet: bool = False,
+    title: str | None = None,
 ) -> str:
     from toss_cli.config import load_config
 
@@ -92,7 +93,8 @@ def deploy(
     try:
         if input_type == "md":
             md_text = Path(path).read_text(encoding="utf-8")
-            title = Path(path).stem.replace("-", " ").replace("_", " ").title()
+            if not title:
+                title = Path(path).stem.replace("-", " ").replace("_", " ").title()
             html = templates.render_page(title, md_text)
             tmp = tempfile.mkdtemp()
             Path(tmp, "index.html").write_text(html, encoding="utf-8")

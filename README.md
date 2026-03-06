@@ -130,8 +130,9 @@ toss deploy path/to/file.md
 toss deploy path/to/page.html
 toss deploy path/to/site/
 
-# custom slug
+# custom slug and title (for Markdown files)
 toss deploy report.md --slug my-report
+toss deploy report.md --title "My Report"
 
 # build then deploy
 toss deploy . --build "npm run build"

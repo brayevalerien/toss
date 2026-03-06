@@ -72,6 +72,7 @@ def main() -> None:
     p_deploy.add_argument("--build", metavar="CMD", help="run a build command first")
     p_deploy.add_argument("--out", metavar="DIR", help="build output directory (with --build)")
     p_deploy.add_argument("-y", "--yes", action="store_true", help="skip overwrite confirmation")
+    p_deploy.add_argument("--title", help="page title for Markdown deployments")
 
     subparsers.add_parser("list", help="list all deployments")
 
@@ -101,7 +102,7 @@ def main() -> None:
         elif args.command == "deploy":
             if not args.build and not args.path:
                 p_deploy.error("path is required unless --build is specified")
-            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out, yes=args.yes, quiet=args.json)
+            url = deploy(path=args.path, slug=args.slug, build_cmd=args.build, out_dir=args.out, yes=args.yes, quiet=args.json, title=args.title)
             if args.json:
                 slug = url.rstrip("/").rsplit("/", 1)[-1]
                 print(json.dumps({"url": url, "slug": slug}))
