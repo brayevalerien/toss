@@ -136,6 +136,12 @@ def main() -> None:
         elif args.command == "rm":
             validate_slug(args.slug)
             if not args.yes:
+                if not sys.stdin.isatty():
+                    if args.json:
+                        print(json.dumps({"error": "confirmation required, use -y to skip"}))
+                    else:
+                        print("error: confirmation required (non-interactive shell), use -y to skip", file=sys.stderr)
+                    sys.exit(1)
                 answer = input(f"Permanently delete '{args.slug}'? [y/N] ").strip().lower()
                 if answer != "y":
                     print("Cancelled.")
@@ -168,7 +174,7 @@ def main() -> None:
                 print(f"  unique visitors  {data['unique_ips']}")
                 print(f"  last accessed    {last}")
 
-    except (FileNotFoundError, RuntimeError, ValueError) as e:
+    except (FileNotFoundError, RuntimeError, ValueError, EOFError) as e:
         print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
 
