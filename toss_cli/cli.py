@@ -149,9 +149,16 @@ def main() -> None:
 
         elif args.command == "stats":
             validate_slug(args.slug)
+            config = load_config()
+            if "log_path" not in config:
+                if args.json:
+                    print(json.dumps({"total": None, "unique_ips": None, "last_accessed": None}))
+                else:
+                    print("stats unavailable (log_path not configured, run toss init to set it up)")
+                return
             if not args.json:
                 print("fetching stats...", file=sys.stderr)
-            data = get_stats(load_config(), args.slug)
+            data = get_stats(config, args.slug)
             if args.json:
                 print(json.dumps(data))
             else:
