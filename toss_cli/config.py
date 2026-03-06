@@ -32,7 +32,7 @@ def _check_tools() -> None:
     missing = [t for t in ("rsync", "ssh") if shutil.which(t) is None]
     if missing:
         raise RuntimeError(
-            f"Missing the following dependencies: {', '.join(missing)}\nPlease them via your system package manager (e.g. apt install rsync openssh-client)."
+            f"Missing the following dependencies: {', '.join(missing)}\nPlease install them via your system package manager (e.g. apt install rsync openssh-client)."
         )
 
 
