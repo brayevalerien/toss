@@ -135,7 +135,12 @@ def get_all_stats(config: dict, slugs: list[str]) -> dict[str, dict] | None:
     if "log_path" not in config:
         return None
     log_path = _q(config["log_path"])
-    cmd = f"if [ ! -f {log_path} ]; then echo TOSS_LOG_MISSING; elif [ ! -r {log_path} ]; then echo TOSS_LOG_UNREADABLE; else cat {log_path}; fi"
+    pattern = shlex.quote("|".join(f"/{s}/" for s in slugs))
+    cmd = (
+        f"if [ ! -f {log_path} ]; then echo TOSS_LOG_MISSING;"
+        f" elif [ ! -r {log_path} ]; then echo TOSS_LOG_UNREADABLE;"
+        f" else grep -E {pattern} {log_path} || true; fi"
+    )
     result = run_ssh(config["host"], cmd)
     if result.returncode != 0 and result.stderr.strip():
         return None
@@ -143,6 +148,7 @@ def get_all_stats(config: dict, slugs: list[str]) -> dict[str, dict] | None:
     if out in ("TOSS_LOG_MISSING", "TOSS_LOG_UNREADABLE"):
         return None
 
+    slug_set = set(slugs)
     totals: dict[str, int] = {s: 0 for s in slugs}
     ips: dict[str, set[str]] = {s: set() for s in slugs}
 
@@ -158,13 +164,13 @@ def get_all_stats(config: dict, slugs: list[str]) -> dict[str, dict] | None:
         if not (200 <= status < 400):
             continue
         uri = entry.get("request", {}).get("uri", "")
-        for slug in slugs:
-            if f"/{slug}/" in uri:
-                totals[slug] += 1
-                ip = entry.get("request", {}).get("remote_ip")
-                if ip:
-                    ips[slug].add(ip)
-                break
+        parts = uri.strip("/").split("/")
+        if parts and parts[0] in slug_set:
+            slug = parts[0]
+            totals[slug] += 1
+            ip = entry.get("request", {}).get("remote_ip")
+            if ip:
+                ips[slug].add(ip)
 
     return {s: {"total": totals[s], "unique_ips": len(ips[s])} for s in slugs}
 
