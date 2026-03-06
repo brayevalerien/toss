@@ -14,6 +14,8 @@ def _cmd_list() -> None:
         print("No deployments found.")
         return
     slugs = [slug for slug, _, _ in entries]
+    if "log_path" in config:
+        print("fetching stats...", file=sys.stderr)
     stats = get_all_stats(config, slugs)
     col = max(len(slug) for slug in slugs)
     col = max(col, 4)
@@ -101,11 +103,13 @@ def main() -> None:
                 if answer != "y":
                     print("Cancelled.")
                     return
+            print("deleting...", file=sys.stderr)
             undeploy_slug(load_config(), args.slug)
             print(f"Deleted: {args.slug}")
 
         elif args.command == "stats":
             validate_slug(args.slug)
+            print("fetching stats...", file=sys.stderr)
             data = get_stats(load_config(), args.slug)
             last = data["last_accessed"] if data["last_accessed"] is not None else "never"
             print(f"stats for {args.slug}")

@@ -2,6 +2,7 @@ import random
 import shutil
 import string
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -35,6 +36,7 @@ def _detect_input(path: Path) -> str:
 
 
 def _prepare_build(cmd: str, out_dir: str | None) -> Path:
+    print("building...", file=sys.stderr)
     result = subprocess.run(cmd, shell=True)
     if result.returncode != 0:
         raise RuntimeError(f"Build command failed with exit code {result.returncode}")
@@ -100,7 +102,9 @@ def deploy(
         else:
             local_dir = str(local_dir or path)
 
+        print("deploying...", file=sys.stderr)
         remote.rsync_deploy(config, str(local_dir), slug)
+        print("done", file=sys.stderr)
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
